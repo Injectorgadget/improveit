@@ -1,7 +1,6 @@
 import streamlit as st
 from pymongo import MongoClient
 from datetime import datetime
-import socket
 from PIL import Image
 import certifi
 import time
@@ -35,29 +34,16 @@ def get_next_id():
 # -----------------------------
 # Insert Suggestion into MongoDB
 # -----------------------------
-def submit_suggestion(name, department, location, suggestion, host, ip):
+def submit_suggestion(name, department, location, suggestion):
     doc = {
-        "id": get_next_id(),  # REQUIRED so Admin Dashboard works
+        "id": get_next_id(),
         "name": name,
         "department": department,
         "location": location,
         "suggestion": suggestion,
-        "machine_host": host,
-        "machine_ip": ip,
         "date_submitted": datetime.utcnow().isoformat()
     }
     collection.insert_one(doc)
-
-# -----------------------------
-# Machine Info
-# -----------------------------
-def get_machine_info():
-    host = socket.gethostname()
-    try:
-        ip = socket.gethostbyname(host)
-    except:
-        ip = "Unknown"
-    return host, ip
 
 # -----------------------------
 # Page Setup
@@ -66,8 +52,6 @@ st.set_page_config(page_title="ImproveIt", page_icon="", layout="wide")
 
 header = Image.open("assets/improveit_header_120.png")
 st.image(header, width="stretch")
-
-machine_host, machine_ip = get_machine_info()
 
 st.subheader("Submit a Suggestion")
 
@@ -130,7 +114,7 @@ if submitted:
     elif not suggestion.strip():
         st.error("Suggestion cannot be empty.")
     else:
-        submit_suggestion(name, department, location, suggestion, machine_host, machine_ip)
+        submit_suggestion(name, department, location, suggestion)
 
         st.session_state.success_banner = "Your suggestion has been submitted successfully!"
         st.session_state.banner_time = time.time()
