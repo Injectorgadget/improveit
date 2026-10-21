@@ -12,7 +12,8 @@ import time
 def init_mongo():
     ca = certifi.where()
 
-    client = MongoClient(st.secrets["MONGO_URI"],
+    client = MongoClient(
+        st.secrets["MONGO_URI"],
         tlsCAFile=ca
     )
 
@@ -20,22 +21,32 @@ def init_mongo():
     collection = db["suggestions"]    # collection
     return collection
 
-
 collection = init_mongo()
 
+# -----------------------------
+# Helper: Get Next Auto-Increment ID
+# -----------------------------
+def get_next_id():
+    last = collection.find_one(sort=[("id", -1)])
+    if last and "id" in last:
+        return last["id"] + 1
+    return 1
 
+# -----------------------------
+# Insert Suggestion into MongoDB
+# -----------------------------
 def submit_suggestion(name, department, location, suggestion, host, ip):
     doc = {
+        "id": get_next_id(),  # REQUIRED so Admin Dashboard works
         "name": name,
         "department": department,
         "location": location,
         "suggestion": suggestion,
         "machine_host": host,
         "machine_ip": ip,
-        "date_submitted": datetime.now().isoformat()
+        "date_submitted": datetime.utcnow().isoformat()
     }
     collection.insert_one(doc)
-
 
 # -----------------------------
 # Machine Info
@@ -47,7 +58,6 @@ def get_machine_info():
     except:
         ip = "Unknown"
     return host, ip
-
 
 # -----------------------------
 # Page Setup
@@ -61,7 +71,6 @@ machine_host, machine_ip = get_machine_info()
 
 st.subheader("Submit a Suggestion")
 
-
 # -----------------------------------------
 # Session state initialization
 # -----------------------------------------
@@ -74,7 +83,6 @@ if "success_banner" not in st.session_state:
 if "banner_time" not in st.session_state:
     st.session_state.banner_time = None
 
-
 # -----------------------------------------
 # Clear form fields BEFORE rendering widgets
 # -----------------------------------------
@@ -84,7 +92,6 @@ if st.session_state.clear_form:
     st.session_state.loc_field = None
     st.session_state.sugg_field = ""
     st.session_state.clear_form = False
-
 
 # -----------------------------
 # Suggestion Form
@@ -114,7 +121,6 @@ with st.form("suggestion_form"):
 
     submitted = st.form_submit_button("Submit")
 
-
 # -----------------------------
 # Handle submission
 # -----------------------------
@@ -131,7 +137,6 @@ if submitted:
 
         st.session_state.clear_form = True
         st.rerun()
-
 
 # -----------------------------
 # Display temporary success banner (5 seconds)
