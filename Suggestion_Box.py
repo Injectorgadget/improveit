@@ -85,7 +85,7 @@ with st.form("suggestion_form"):
     name = st.text_input("Your Name (required)", key="name_field")
 
     department = st.selectbox("Department", [
-        "250 Overhead","310 Mixing","350 SG&A","650 Maintenance","740 Tubing",
+        "","250 Overhead","310 Mixing","350 SG&A","650 Maintenance","740 Tubing",
         "741 Bladder Bags","742 Pressroom","743 Finishing","744 Metal Prep","745 Urethane",
         "747 Military Assembly","760 Desma","820 Rubber Track","830 Hayrolls","Accounting",
         "Administration","Assembly","Blast","Business Development","CAD/PLM","Compliance",
@@ -99,7 +99,7 @@ with st.form("suggestion_form"):
         "Tooling","Vetronics","Weld","Wood Shop","XM30"
     ], key="dept_field")
 
-    location = st.selectbox("Location", ["AUBR", "BIDD", "LAPR", "LNSG", "PLYM", "STMY"], key="loc_field")
+    location = st.selectbox("Location", ["","AUBR", "BIDD", "LAPR", "LNSG", "PLYM", "STMY"], key="loc_field")
 
     suggestion = st.text_area("Your Suggestion", key="sugg_field")
 
