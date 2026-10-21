@@ -1,45 +1,45 @@
 import streamlit as st
-import sqlite3
+from pymongo import MongoClient
 from datetime import datetime
 import socket
 from PIL import Image
+import certifi
 import time
 
 # -----------------------------
-# Database Initialization
+# MongoDB Initialization
 # -----------------------------
-def init_db():
-    conn = sqlite3.connect("suggestions.db")
-    cur = conn.cursor()
+def init_mongo():
+    ca = certifi.where()
 
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS suggestions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            department TEXT NOT NULL,
-            location TEXT NOT NULL,
-            suggestion TEXT NOT NULL,
-            machine_host TEXT,
-            machine_ip TEXT,
-            date_submitted TEXT
-        )
-    """)
+    client = MongoClient(secrets["MONGO_URI"]),
+        tlsCAFile=ca
+    )
 
-    conn.commit()
-    conn.close()
+    db = client["improveit"]          # database
+    collection = db["suggestions"]    # collection
+    return collection
+
+
+collection = init_mongo()
 
 
 def submit_suggestion(name, department, location, suggestion, host, ip):
-    conn = sqlite3.connect("suggestions.db")
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO suggestions (name, department, location, suggestion, machine_host, machine_ip, date_submitted)
-        VALUES (?,?,?,?,?,?,?)
-    """, (name, department, location, suggestion, host, ip, datetime.now().isoformat()))
-    conn.commit()
-    conn.close()
+    doc = {
+        "name": name,
+        "department": department,
+        "location": location,
+        "suggestion": suggestion,
+        "machine_host": host,
+        "machine_ip": ip,
+        "date_submitted": datetime.now().isoformat()
+    }
+    collection.insert_one(doc)
 
 
+# -----------------------------
+# Machine Info
+# -----------------------------
 def get_machine_info():
     host = socket.gethostname()
     try:
@@ -53,7 +53,6 @@ def get_machine_info():
 # Page Setup
 # -----------------------------
 st.set_page_config(page_title="ImproveIt", page_icon="", layout="wide")
-init_db()
 
 header = Image.open("assets/improveit_header_120.png")
 st.image(header, width="stretch")
@@ -110,6 +109,7 @@ with st.form("suggestion_form"):
     ], key="dept_field")
 
     location = st.selectbox("Location", ["AUBR", "BIDD", "LAPR", "LNSG", "PLYM", "STMY"], key="loc_field")
+
     suggestion = st.text_area("Your Suggestion", key="sugg_field")
 
     submitted = st.form_submit_button("Submit")
@@ -126,11 +126,9 @@ if submitted:
     else:
         submit_suggestion(name, department, location, suggestion, machine_host, machine_ip)
 
-        # Activate banner for 5 seconds
         st.session_state.success_banner = "Your suggestion has been submitted successfully!"
         st.session_state.banner_time = time.time()
 
-        # Clear form on next run
         st.session_state.clear_form = True
         st.rerun()
 
@@ -140,7 +138,6 @@ if submitted:
 # -----------------------------
 if st.session_state.success_banner:
 
-    # Has 5 seconds passed?
     if time.time() - st.session_state.banner_time < 5:
         st.markdown(
             f"""
@@ -159,6 +156,5 @@ if st.session_state.success_banner:
             unsafe_allow_html=True
         )
     else:
-        # Auto-hide banner after 5 seconds
         st.session_state.success_banner = None
         st.session_state.banner_time = None
