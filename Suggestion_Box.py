@@ -12,7 +12,7 @@ import time
 def init_mongo():
     ca = certifi.where()
 
-    client = MongoClient(secrets["MONGO_URI"]),
+    client = MongoClient(secrets["MONGO_URI"],
         tlsCAFile=ca
     )
 
